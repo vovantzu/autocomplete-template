@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Autocompletion form</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<style>
+	.search-section {
+		background-color: #E6EAEF;
+		box-sizing: border-box;
+		padding: 30px 20px 20px 20px;
+		font-family: Arial, sans-serif;
+		color: #3F4E5E;
+		display: flex;
+		flex-flow: column nowrap;
+		align-items: center;
+	}
+	.search-section__header {
+		font-family: Source Sans Pro, sans-serif;
+		font-size: 20px;
+		text-align: center;
+	}
+	.search-form {
+		width: 80%;
+		max-width: 600px;
+		position: relative;
+	}
+	.search-form__description {
+		font-size: 14px;
+		font-family: Arial, sans-serif;
+		font-style: italic;
+	}
+	.search-form__input {
+		box-sizing: border-box;
+		width: 75%;
+		border: #CBD3DD 1px solid;
+		font-size: 18px;
+		font-weight: 400;
+		height: 40px;
+		line-height: 23px;
+		padding: 0 15px;
+	}
+	.search-form__button {
+		box-sizing: border-box;
+		width: 20%;
+		height: 40px;
+		font-size: 18px;
+		cursor: pointer;
+	}
+	.autocomplete-list {
+		  position: absolute;
+		  top: 100%;
+		  left: 0;
+		  right: 0;
+		  width: 75%;
+		  border: 1px solid #d4d4d4;
+		  border-bottom: none;
+		  border-top: none;
+		  z-index: 99;
+	}
+	.autocomplete-list div {
+	    padding: 10px;
+	    cursor: pointer;
+	    background-color: #fff; 
+	    border-bottom: 1px solid #d4d4d4; 
+	}
+	.autocomplete-list div:hover {
+	    background-color: #e9e9e9; 
+	}
+	</style>
+</head>
+<body>
+	<div class="search-section">
+		<h3 class="search-section__header">Search for items</h3>
+		<form class="search-form" method="post" action="#">
+			<p class="search-form__description">Please enter search phrase below:</p>
+			<input id="search-input" class="search-form__input" type="text" name="email" placeholder="Search" />
+			<input id="search-submit" class="search-form__button" type="submit" value="Search" />
+		</form>
+	</div>
+	<script>
+		// variables
+		let data = [];
+		const 
+			input = document.getElementById('search-input'), 
+			submit = document.getElementById('search-submit');
+
+    	// event listeners
+
+    	window.onload = () => {
+    		// fetch data asynchronously
+    		fetchData();
+    	};
+
+		document.addEventListener('click', (e) => {
+		    closeSuggestions(e.target);
+		});
+
+		input.addEventListener('input', (e) => {
+    		e.preventDefault();
+    		closeSuggestions();
+    		renderSuggestions(e.target);
+    	});
+
+    	submit.addEventListener('click', (e) => {
+    		e.preventDefault();
+    		// TODO SOMETHING
+
+    	});
+
+    	// function declarations
+    	async function fetchData() {
+    		data = await fetch('https://jsonplaceholder.typicode.com/posts'
+    		).then(result => {
+    			return result.json()
+		  	}).catch(err => console.log(`Error: ${err}`));
+    	}
+
+    	function filterData(keyword) {
+    		// search through titles
+    		const res = data.filter(item => {
+                return item.title.indexOf(keyword) > -1;
+            });
+            return res;
+    	}
+
+    	function renderSuggestions(el) {
+    		let keyword = el.value.trim();
+    		if(keyword == '') return;
+    		let suggestions = filterData(keyword);
+    		if(suggestions.length == 0) return;
+
+		    let a = document.createElement('div');
+		    a.setAttribute('class', 'autocomplete-list');
+		    el.parentNode.appendChild(a);
+		    // limit number of suggestions by 10
+		    for (let i = 0; i < suggestions.length && i < 11; i++) {
+		        let b = document.createElement('div');
+		        // make the matching letters bold
+		        let index = suggestions[i].title.indexOf(keyword);
+		        b.innerHTML = suggestions[i].title.substring(0, index) + "<strong>" + suggestions[i].title.substr(index, keyword.length) + "</strong>" + suggestions[i].title.substr(index + keyword.length);
+		        // input field that will hold the current array item's value
+		        b.innerHTML += "<input type='hidden' value='" + suggestions[i].title + "'>";
+		        b.addEventListener('click', function(e) {
+		            input.value = this.getElementsByTagName('input')[0].value;
+		            closeSuggestions();
+		        });
+		        a.appendChild(b);
+		    }
+    	}
+
+    	function closeSuggestions() {
+		    const x = document.getElementsByClassName('autocomplete-list');
+		    for (let i = 0; i < x.length; i++) {
+		    	x[i].remove();
+		    }
+		}
+	</script>
+</body>
+</html>
